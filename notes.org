@@ -1,0 +1,160 @@
+* Notes
+I set this lab up with the following commands:
+#+begin_src bash
+bundle install
+rails db:migrate db:seed
+rails s
+#+end_src
+
+I also modified the 'Gemfile' with the following contents:
+#+begin_src ruby
+
+#+end_src
+
+I then created a 'Author' serializer with the following 'rails g serializer' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-active-model-serializer-lab $ rails g serializer author
+      create  app/serializers/author_serializer.rb
+#+end_src
+
+I then revised the contents of the 'app/serializers/author_serializer.rb' Author serializer file with the following contents:
+#+begin_src ruby
+class AuthorSerializer < ActiveModel::Serializer
+  attributes :name
+  has_one :profile
+  has_many :posts, serializer: AuthorPostSerializer
+end
+#+end_src
+
+I then modified the 'app/controllers/authors_controller.rb' controller file with the following revisions:
+#+begin_src ruby
+class AuthorsController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
+
+  def index
+    authors = Author.all
+    render json: authors, include: ["profile", "posts", "posts.tags"]
+  end
+
+  def show
+    author = Author.find(params[:id])
+    render json: author, include: ["profile", "posts", "posts.tags"]
+  end
+
+  private
+
+  def render_not_found_response
+    render json: { error: "Author not found" }, status: :not_found
+  end
+
+end
+#+end_src
+
+I then generated the 'post' serializer with the following 'rails g serializer' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-active-model-serializer-lab $ rails g serializer post
+      create  app/serializers/post_serializer.rb
+#+end_src
+
+I then revised the 'app/serializers/post_serializer.rb' serializer file with the following contents:
+#+begin_src ruby
+class PostSerializer < ActiveModel::Serializer
+  attributes :title, :content
+  belongs_to :author
+  has_many :tags
+end
+#+end_src
+
+I then revised the 'app/controllers/posts_controller.rb' controller file with the following contents:
+#+begin_src ruby
+class PostsController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
+
+  def index
+    posts = Post.all
+    render json: posts
+  end
+
+  def show
+    post = Post.find(params[:id])
+    render json: post
+  end
+
+  private
+
+  def render_not_found_response
+    render json: { error: "Post not found" }, status: :not_found
+  end
+
+end
+#+end_src
+
+I then created a 'tag' serializer with the following 'rails g serializer' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-active-model-serializer-lab $ rails g serializer tag
+      create  app/serializers/tag_serializer.rb
+#+end_src
+
+I then revised the 'app/serializers/tag_serializer.rb' serializer file with the following contents:
+#+begin_src ruby
+class TagSerializer < ActiveModel::Serializer
+  attributes :name
+
+  has_many :posts
+end
+#+end_src
+
+I then revised the 'app/controllers/tags_controller.rb' controller file with the following revisions:
+#+begin_src ruby
+class TagsController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
+
+  def index
+    tags = Tag.all
+    render json: tags
+  end
+
+  def show
+    tag = Tag.find(params[:id])
+    render json: tag
+  end
+
+  private
+
+  def render_not_found_response
+    render json: { error: "Tag not found" }, status: :not_found
+  end
+
+end
+#+end_src
+
+I then created another serializer called 'author_post' to link the two models together with the 'rails g serializer' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-active-model-serializer-lab $ rails g serializer author_post
+      create  app/serializers/author_post_serializer.rb
+#+end_src
+
+I then modified the contents of the 'app/serializers/author_post_serializer.rb' file to include the following:
+#+begin_src ruby
+class AuthorPostSerializer < ActiveModel::Serializer
+  attributes :title, :short_content
+  has_many :tags
+
+  def short_content
+    "#{object.content[0..39]}..."
+  end
+end
+#+end_src
+
+I then added another serializer for the 'profile' model with the following 'rails g serializer' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-active-model-serializer-lab $ rails g serializer profile
+      create  app/serializers/profile_serializer.rb
+#+end_src
+
+I then modified the contents of the 'app/serializers/profile_serializer.rb' file with the following:
+#+begin_src ruby
+class ProfileSerializer < ActiveModel::Serializer
+  attributes :username, :email, :bio, :avatar_url
+end
+#+end_src
